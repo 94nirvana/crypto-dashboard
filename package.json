@@ -1,0 +1,19 @@
+{
+  "name": "crypto-market-dashboard",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Painel das 10 criptomoedas com maior volume de negociacao",
+  "type": "commonjs",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test tests/*.test.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {},
+  "author": "",
+  "license": "MIT"
+}
