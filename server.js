@@ -79,6 +79,11 @@ const CRITERIA = Object.freeze({
 
 const DEFAULT_CRITERIA = 'volume_desc';
 
+const COINGECKO_IMAGE_HOSTS = new Set([
+  'assets.coingecko.com',
+  'coin-images.coingecko.com',
+]);
+
 const MIME = Object.freeze({
   '.html': 'text/html; charset=utf-8',
   '.css': 'text/css; charset=utf-8',
@@ -226,7 +231,7 @@ function normalize(payload, top) {
     id: String(coin.id),
     symbol: String(coin.symbol || '').toUpperCase().slice(0, 12),
     name: String(coin.name || '').slice(0, 64),
-    image: typeof coin.image === 'string' && coin.image.startsWith('https://') ? coin.image : null,
+    image: safeCoinImage(coin.image),
     price: num(coin.current_price, 2),
     volume24h: num(coin.total_volume, 0),
     marketCap: num(coin.market_cap, 0),
@@ -241,6 +246,26 @@ function normalize(payload, top) {
       ? coin.sparkline_in_7d.price.filter((v) => Number.isFinite(v)).slice(-168)
       : [],
   }));
+}
+
+function safeCoinImage(value) {
+  if (typeof value !== 'string') return null;
+
+  try {
+    const image = new URL(value);
+    if (
+      image.protocol !== 'https:' ||
+      !COINGECKO_IMAGE_HOSTS.has(image.hostname) ||
+      image.username ||
+      image.password ||
+      image.port
+    ) {
+      return null;
+    }
+    return image.href;
+  } catch {
+    return null;
+  }
 }
 
 function num(value, decimals) {
@@ -276,7 +301,7 @@ function applySecurityHeaders(res, nonce) {
       "default-src 'none'",
       "script-src 'self'",
       "style-src 'self'",
-      "img-src 'self' https: data:",
+      "img-src 'self' https://assets.coingecko.com https://coin-images.coingecko.com data:",
       "connect-src 'self'",
       "font-src 'self'",
       "base-uri 'none'",

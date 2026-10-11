@@ -42,9 +42,21 @@ test('normalize: rejeita payload que nao e array', () => {
   assert.throws(() => normalize({ nope: true }, 10), /payload invalido/i);
 });
 
-test('normalize: remove imagens com esquema nao permitido (anti-SSRF via <img>)', () => {
-  const [coin] = normalize([{ id: 'x', image: 'http://evil.local/x.png' }], 10);
-  assert.equal(coin.image, null);
+test('normalize: aceita imagens apenas dos hosts HTTPS da CoinGecko', () => {
+  const [safe, untrustedHost, unsafeScheme, credentials] = normalize(
+    [
+      { id: 'safe', image: 'https://assets.coingecko.com/coins/example.png' },
+      { id: 'untrusted', image: 'https://evil.example/image.png' },
+      { id: 'scheme', image: 'http://assets.coingecko.com/image.png' },
+      { id: 'credentials', image: 'https://user:pass@assets.coingecko.com/image.png' },
+    ],
+    10
+  );
+
+  assert.equal(safe.image, 'https://assets.coingecko.com/coins/example.png');
+  assert.equal(untrustedHost.image, null);
+  assert.equal(unsafeScheme.image, null);
+  assert.equal(credentials.image, null);
 });
 
 test('normalize: limita tamanho de simbolo/nome', () => {
